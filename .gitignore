@@ -1,0 +1,12 @@
+# Ignorar el entorno virtual de Python
+vhids/
+__pycache__/
+*.pyc
+
+# Ignorar los logs de pruebas locales
+logs/
+*.log
+
+# Archivos ocultos del sistema o del editor
+.DS_Store
+.vscode/
