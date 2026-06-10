@@ -11,6 +11,9 @@ from modules.log_manager import registrar_evento
 from modules.file_integrity import verificar_integridad
 from modules.file_monitor import iniciar_monitoreo
 from modules.process_monitor import monitorear_procesos
+from modules.network_monitor import iniciar_monitor_red
+from modules.auth_monitor import monitorear_autenticacion
+
 
 def verificar_privilegios():
     """Garantiza que el HIDS se ejecute con los permisos requeridos (sudo)."""
@@ -45,9 +48,17 @@ def ejecutar_hids_unificado():
         # Hilo B: Monitor de procesos, recursos y sniffers (Psutil), monitorear_procesos viene de process_monitor
         hilo_procesos = threading.Thread(target=monitorear_procesos, daemon=True)
         
+        #Hilo C: Monitor de red (modo promiscuo y sockets escuchando)
+        hilo_red = threading.Thread(target=iniciar_monitor_red, daemon=True)
+
+        #Hilo D: Monitor de Autenticacion y accesos 
+        hilo_auth = threading.Thread(target=monitorear_autenticacion)
+
         # Arrancamos los dos guardianes en paralelo
         hilo_archivos.start()
         hilo_procesos.start()
+        hilo_red.start()
+        hilo_auth.start()
         
         print("[+] HIDS operando en tiempo real con todos sus módulos concurrentes.")
         print("[+] Guardando registros JSON estructurados en logs/events.log")

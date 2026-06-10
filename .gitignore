@@ -10,3 +10,6 @@ logs/
 # Archivos ocultos del sistema o del editor
 .DS_Store
 .vscode/
+
+data/baseline.json
+logs/events.log
