@@ -7,14 +7,14 @@ from watchdog.events import FileSystemEventHandler
 # IMPORTANTE: Importamos la función centralizada de logs en JSON
 from modules.log_manager import registrar_evento
 
-# Configuración basada exactamente en la guía de la cátedra
+# Configuracion basada exactamente en la guía de la cátedra
 DIRECTORIOS_VIGILADOS = ['/home/matias/hids/data', '/tmp']
 EXTENSIONES_SOSPECHOSAS = ['.sh', '.py', '.elf']
 
 def procesar_y_registrar_alerta(tipo_evento, ruta_archivo):
     """Evalúa la criticidad del evento y lo envía al administrador de logs JSON."""
     
-    # 🔍 FILTRO EXCLUSIVO: Ignorar el ruido del Language Server de VS Code en /tmp
+    # FILTRO EXCLUSIVO: Ignorar el ruido del Language Server de VS Code en /tmp
     # Esto evita falsos positivos masivos y que se congele la conexión SSH
     if "python-languageserver" in ruta_archivo or ".vscode-server" in ruta_archivo:
         return  # Salimos de la función inmediatamente sin registrar nada
@@ -22,12 +22,12 @@ def procesar_y_registrar_alerta(tipo_evento, ruta_archivo):
     nombre_archivo = os.path.basename(ruta_archivo)
     _, extension = os.path.splitext(nombre_archivo)
     
-    # Valores por defecto para un evento estándar
+    # Valores por defecto para un evento estandar
     id_alerta = "ALERTA_MONITOR"
     criticidad = "INFO"
     mensaje = f"Evento {tipo_evento} detectado en el archivo: {ruta_archivo}"
     
-    # Lógica de la guía: alertar con criticidad si aparecen ejecutables en directorios temporales
+    # Logica de la guia: alertar con criticidad si aparecen ejecutables en directorios temporales
     if "/tmp" in ruta_archivo and extension in EXTENSIONES_SOSPECHOSAS:
         id_alerta = "ALERTA_CRITICA"
         criticidad = "CRITICAL"

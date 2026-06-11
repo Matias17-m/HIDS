@@ -27,7 +27,7 @@ def monitorear_procesos():
             # Guardamos los PIDs detectados en esta vuelta para limpiar los viejos después
             pids_activos_en_ronda = set()
             
-            # 2. Analisis iterativo de procesos en ejecucion, de cada programa en ejecucion extrae 4 datos 
+            # 2 Analisis iterativo de procesos en ejecucion, de cada programa en ejecucion extrae 4 datos 
             for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
                 try:
                     info = proc.info
@@ -66,7 +66,7 @@ def monitorear_procesos():
             # Limpiamos del set global los PIDs que ya se cerraron para liberar memoria
             pids_reportados = pids_reportados.intersection(pids_activos_en_ronda)
             
-            # Pausa táctica balanceada a 2 segundos para mayor velocidad de respuesta
+            # Pausa tactica balanceada a 2 segundos para mayor velocidad de respuesta
             time.sleep(2)
             
         except Exception as e:

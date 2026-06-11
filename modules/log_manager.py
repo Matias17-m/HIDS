@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-# Forzamos la carga del archivo .env apuntando a su ubicación real
+# Forzamos la carga del archivo .env apuntando a su ubicacion real
 ruta_env = '/home/matias/hids/.env'
 load_dotenv(dotenv_path=ruta_env)
 import json
@@ -56,14 +56,14 @@ def enviar_alerta_email(tipo_evento, modulo, prioridad, mensaje):
     msg.attach(MIMEText(cuerpo, 'plain'))
     
     try:
-        # Iniciamos la conexión con el servidor SMTP de Google (Puerto 587 para TLS)
+        # Iniciamos la conexion con el servidor SMTP de Google (Puerto 587 para TLS)
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()  # Cifrado de la conexión por seguridad
         
-        # Autenticación segura con el token de aplicación
+        # Autenticacion segura con el token de aplicación
         server.login(remitente, password)
         
-        # Envío definitivo del paquete MIME encapsulado
+        # Envio definitivo del paquete MIME encapsulado
         server.sendmail(remitente, destinatario, msg.as_string())
         server.quit()
         
