@@ -1,4 +1,5 @@
 import sys
+from dotenv import load_dotenv
 import os
 import threading  # LIBRERÍA CRÍTICA: Permite la ejecución en paralelo
 import time

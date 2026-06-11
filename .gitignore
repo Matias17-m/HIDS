@@ -13,3 +13,6 @@ logs/
 
 data/baseline.json
 logs/events.log
+
+# Credenciales y variables de entorno críticas
+.env

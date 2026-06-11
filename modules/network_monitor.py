@@ -30,7 +30,7 @@ def monitorear_puertos():
     """ Escanea las conexiones de red del sistema en busca de sockets en estado LISTEN
     para mapear puertos abiertos en tiempo real """
     # Lista de puertos estandar que permitimos (22 para SSH, 53 para DNS, 68 para DHCP, 3306 mariaDB)
-    puertos_autorizados = [22, 53, 68, 3306] 
+    puertos_autorizados = [22, 53, 68, 3306, 5000] 
     
     try:
         # Obtenemos las conexiones de red del sistema de tipo TCP

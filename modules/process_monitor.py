@@ -1,4 +1,3 @@
-
 #modulo inspector de que cada pocos segundos pide lista de programas en ejecucion, busca si hay herramientas de hackeoo si algun programa satura el cpu generando reportes automat+icos
 import psutil
 import time
@@ -14,6 +13,9 @@ def monitorear_procesos():
     # Herramientas de captura de paquetes explicitamente prohibidas por la catedra , LA LISTA NEGRA
     sniffers_prohibidos = ["tcpdump", "wireshark", "tshark"]
     
+    # Registro temporal de PIDs ya reportados para evitar spam en el Dashboard
+    pids_reportados = set()
+    
     while True:
         try:
             # 1. Auditoria de Usuarios Conectados
@@ -21,6 +23,9 @@ def monitorear_procesos():
             for usuario in usuarios_activos:
                 # Opcional: se puede mapear quien esta adentro del sistema si es necesario para mas adelante
                 pass
+            
+            # Guardamos los PIDs detectados en esta vuelta para limpiar los viejos después
+            pids_activos_en_ronda = set()
             
             # 2. Analisis iterativo de procesos en ejecucion, de cada programa en ejecucion extrae 4 datos 
             for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
@@ -33,9 +38,14 @@ def monitorear_procesos():
                     
                     # Control A: Deteccion de Sniffers Activos
                     if any(sniffer in nombre_proceso for sniffer in sniffers_prohibidos):
-                        mensaje_snif = f"Herramienta de captura detectada: {info['name']} en ejecución activa (PID: {pid})."
-                        registrar_evento("ALERTA_PROMISCUO", "process_monitor", "CRITICAL", mensaje_snif)
-                        print(f"[CRITICAL] {mensaje_snif}")
+                        pids_activos_en_ronda.add(pid)
+                        
+                        # Solo alertamos si no lo habíamos reportado en la vuelta anterior
+                        if pid not in pids_reportados:
+                            mensaje_snif = f"Herramienta de captura detectada: {info['name']} en ejecución activa (PID: {pid})."
+                            registrar_evento("ALERTA_PROMISCUO", "process_monitor", "CRITICAL", mensaje_snif)
+                            print(f"[CRITICAL] {mensaje_snif}")
+                            pids_reportados.add(pid)
                     
                     # Control B: Umbral de Carga de CPU excesivo (>80%)
                     if cpu > 80.0:
@@ -50,16 +60,19 @@ def monitorear_procesos():
                         print(f"[WARNING] {mensaje_ram}")
                         
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                    # gestoin de errores por procesos efimeros del sistema que mueren en el milisegundo de lectura
+                    # gestion de errores por procesos efimeros del sistema que mueren en el milisegundo de lectura
                     continue
             
-            # Pausa tactica de 5 segundos para balancear la carga del procesador de la VM
-            time.sleep(5)
+            # Limpiamos del set global los PIDs que ya se cerraron para liberar memoria
+            pids_reportados = pids_reportados.intersection(pids_activos_en_ronda)
+            
+            # Pausa táctica balanceada a 2 segundos para mayor velocidad de respuesta
+            time.sleep(2)
             
         except Exception as e:
             print(f"[-] Error crítico en bucle de procesos: {e}")
-            time.sleep(5)
+            time.sleep(2)
 
 if __name__ == "__main__":
-    # Prueba de ejecucipn autonoma del módulo
+    # Prueba de ejecucion autonoma del módulo
     monitorear_procesos()

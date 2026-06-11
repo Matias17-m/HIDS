@@ -82,13 +82,15 @@ def verificar_integridad():
         
         # Caso 2: El hash actual no coincide con la firma registrada (Modificacion)
         elif archivo in baseline and hash_actual != baseline[archivo]:
-            mensaje_log = f"MODIFICACIÓN DETECTADA en: {archivo} (Hash previo: {baseline[archivo][:10]}... -> Actual: {hash_actual[:10]}...)"
-            registrar_evento("ALERTA_INTEGRIDAD", "file_integrity", "CRITICAL", mensaje_log)
-            
-            # Formato extendido profesional en pantalla para la catedra
+            # 1 Primero imprimimos los datos vistosos en la pantalla
             print(f"[ALERTA] MODIFICACIÓN DETECTADA en: {archivo}")
             print(f"  └─► Firma legítima guardada el : {fecha_baseline} ({baseline[archivo][:10]}...)")
             print(f"  └─► Firma hostil detectada el  : {fecha_actual} ({hash_actual[:10]}...)")
+            print("-" * 65) # Una línea divisoria para que quede prolijo
+            
+            # 2 Despues llamamos al registro y despacho de correo
+            mensaje_log = f"MODIFICACIÓN DETECTADA en: {archivo} (Hash previo: {baseline[archivo][:10]}... -> Actual: {hash_actual[:10]}...)"
+            registrar_evento("ALERTA_INTEGRIDAD", "file_integrity", "CRITICAL", mensaje_log)
 
         # Caso 3: Archivo nuevo que no estaba contemplado en la firma inicial
         elif archivo not in baseline and hash_actual is not None:
