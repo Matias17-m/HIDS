@@ -8,119 +8,89 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:       #f8f9fb;
-      --surface:  #ffffff;
-      --border:   rgba(0,0,0,0.08);
-      --border2:  rgba(0,0,0,0.13);
-      --text1:    #111318;
-      --text2:    #5a6073;
-      --text3:    #9098b0;
-      --radius:   10px;
-      --red:      #E24B4A; --red-bg:   #FCEBEB; --red-dk:   #A32D2D;
-      --amber:    #EF9F27; --amber-bg: #FAEEDA; --amber-dk: #854F0B;
-      --blue:     #378ADD; --blue-bg:  #E6F1FB; --blue-dk:  #185FA5;
-      --green:    #1D9E75; --green-bg: #E1F5EE; --green-dk: #0F6E56;
-      --purple:   #7F77DD; --purple-bg:#EEEDFE; --purple-dk:#3C3489;
+      --bg: #f8f9fb; --surface: #ffffff; --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.13);
+      --text1: #111318; --text2: #5a6073; --text3: #9098b0; --radius: 10px;
+      --red: #E24B4A; --red-bg: #FCEBEB; --red-dk: #A32D2D;
+      --amber: #EF9F27; --amber-bg: #FAEEDA; --amber-dk: #854F0B;
+      --blue: #378ADD; --blue-bg: #E6F1FB; --blue-dk: #185FA5;
+      --green: #1D9E75; --green-bg: #E1F5EE; --green-dk: #0F6E56;
+      --purple: #7F77DD;
     }
+    body { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text1); font-size: 14px; }
 
-    body {
-      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text1);
-      font-size: 14px;
-      min-height: 100vh;
-    }
-
-    /* ── Topbar ── */
-    .topbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .topbar-left { display: flex; align-items: center; gap: 10px; }
-    .topbar-logo { font-size: 16px; font-weight: 600; color: var(--text1); letter-spacing: -0.01em; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .topbar-logo { font-size: 16px; font-weight: 600; }
     .topbar-logo span { color: var(--purple); }
-    .topbar-right { display: flex; align-items: center; gap: 12px; }
-    .badge-online {
-      font-size: 11px; padding: 3px 10px; border-radius: 20px;
-      background: var(--green-bg); color: var(--green-dk);
-      border: 1px solid rgba(29,158,117,0.25);
-    }
+    .badge-online { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--green-bg); color: var(--green-dk); border: 1px solid rgba(29,158,117,0.25); }
     .badge-online::before { content: "● "; font-size: 8px; vertical-align: 1px; }
     #last-update { font-size: 12px; color: var(--text3); }
+    .main { max-width: 1280px; margin: 0 auto; padding: 20px; }
 
-    /* ── Layout ── */
-    .main { max-width: 1280px; margin: 0 auto; padding: 24px 20px; }
+    /* Filtros */
+    .filter-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 16px; }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .filter-label { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .filter-input { height: 34px; border: 1px solid var(--border2); border-radius: 6px; padding: 0 10px; font-size: 13px; color: var(--text1); background: var(--bg); outline: none; transition: border-color 0.15s; }
+    .filter-input:focus { border-color: var(--purple); background: #fff; }
+    .filter-search { width: 200px; }
+    .filter-date   { width: 145px; }
+    .filter-select { width: 150px; cursor: pointer; }
+    .crit-chips { display: flex; gap: 6px; }
+    .chip { height: 34px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border2); font-size: 12px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text2); transition: all 0.15s; white-space: nowrap; display: flex; align-items: center; }
+    .chip:hover { border-color: var(--purple); color: var(--purple); }
+    .chip.active-CRITICA { background: var(--red-bg);   color: var(--red-dk);   border-color: var(--red); }
+    .chip.active-ALTA    { background: var(--amber-bg); color: var(--amber-dk); border-color: var(--amber); }
+    .chip.active-MEDIA   { background: var(--blue-bg);  color: var(--blue-dk);  border-color: var(--blue); }
+    .chip.active-BAJA    { background: var(--green-bg); color: var(--green-dk); border-color: var(--green); }
+    .btn { height: 34px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--border2); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.15s; }
+    .btn-apply { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .btn-apply:hover { opacity: 0.88; }
+    .btn-reset { background: var(--bg); color: var(--text2); }
+    .btn-reset:hover { border-color: var(--text2); color: var(--text1); }
+    .btn-csv { background: var(--green-bg); color: var(--green-dk); border-color: var(--green); margin-left: auto; }
+    .btn-csv:hover { opacity: 0.85; }
+    #filter-count { font-size: 11px; background: rgba(255,255,255,0.3); color: #fff; padding: 1px 7px; border-radius: 20px; margin-left: 4px; display: none; }
 
-    /* ── Metric cards ── */
-    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-    .metric {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-    }
-    .metric-label {
-      font-size: 11px; color: var(--text2); text-transform: uppercase;
-      letter-spacing: 0.06em; margin-bottom: 6px;
-      display: flex; align-items: center; gap: 5px;
-    }
+    /* Metrics */
+    .metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+    .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+    .metric-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
     .metric-val { font-size: 26px; font-weight: 600; line-height: 1; }
     .metric-sub { font-size: 11px; margin-top: 4px; color: var(--text3); }
     .metric-sub.up   { color: var(--red); }
     .metric-sub.good { color: var(--green); }
 
-    /* ── Two-column row ── */
+    /* Panels */
     .row2 { display: grid; grid-template-columns: 1.65fr 1fr; gap: 14px; margin-bottom: 14px; }
-    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+    .panel-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
 
-    /* ── Panels ── */
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-    }
-    .panel-title {
-      font-size: 11px; font-weight: 600; color: var(--text2);
-      text-transform: uppercase; letter-spacing: 0.07em;
-      margin-bottom: 14px;
-    }
+    /* Tabla */
+    .alerts-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .alerts-table th { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; padding: 0 10px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    .alerts-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .alerts-table tr:last-child td { border-bottom: none; }
+    .alerts-table tr:hover td { background: var(--bg); }
+    .td-msg { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+    .td-ts  { color: var(--text3); white-space: nowrap; font-size: 12px; }
+    .td-mod { color: var(--text2); white-space: nowrap; }
+    .sev-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; white-space: nowrap; font-weight: 500; }
+    .sev-CRITICA { background: var(--red-bg);   color: var(--red-dk); }
+    .sev-ALTA    { background: var(--amber-bg); color: var(--amber-dk); }
+    .sev-MEDIA   { background: var(--blue-bg);  color: var(--blue-dk); }
+    .sev-BAJA    { background: var(--green-bg); color: var(--green-dk); }
 
-    /* ── Alert list ── */
-    .alert-row {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px;
-    }
-    .alert-row:last-child { border-bottom: none; }
-    .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-    .alert-body { flex: 1; min-width: 0; }
-    .alert-msg { font-weight: 500; color: var(--text1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .alert-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
-    .sev-badge {
-      font-size: 10px; padding: 2px 8px; border-radius: 10px;
-      white-space: nowrap; flex-shrink: 0; margin-top: 1px; font-weight: 500;
-    }
-    .sev-CRITICA { background: var(--red-bg);    color: var(--red-dk); }
-    .sev-ALTA    { background: var(--amber-bg);  color: var(--amber-dk); }
-    .sev-MEDIA   { background: var(--blue-bg);   color: var(--blue-dk); }
-    .sev-BAJA    { background: var(--green-bg);  color: var(--green-dk); }
+    /* Paginación */
+    .pagination { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 2px; margin-top: 8px; border-top: 1px solid var(--border); font-size: 12px; }
+    .pagination-info { color: var(--text3); }
+    .pagination-btns { display: flex; align-items: center; gap: 4px; }
+    .pg-btn { min-width: 30px; height: 30px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--border2); background: var(--bg); color: var(--text2); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
+    .pg-btn:hover:not(:disabled) { border-color: var(--purple); color: var(--purple); }
+    .pg-btn.active { background: var(--purple); color: #fff; border-color: var(--purple); font-weight: 600; }
+    .pg-btn:disabled { opacity: 0.35; cursor: default; }
 
-    .dot-CRITICA { background: var(--red); }
-    .dot-ALTA    { background: var(--amber); }
-    .dot-MEDIA   { background: var(--blue); }
-    .dot-BAJA    { background: var(--green); }
-
-    /* ── Bar rows ── */
+    /* Bars */
     .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; }
     .bar-row:last-child { margin-bottom: 0; }
     .bar-lbl { width: 110px; color: var(--text2); flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -128,72 +98,107 @@
     .bar-fill { height: 8px; border-radius: 4px; transition: width 0.5s ease; }
     .bar-num { width: 28px; text-align: right; color: var(--text1); font-weight: 500; }
 
-    /* ── Chart wrapper ── */
     .chart-wrap { position: relative; width: 100%; }
-
-    /* ── Empty state ── */
     .empty { text-align: center; padding: 32px 16px; color: var(--text3); font-size: 13px; }
-    .empty i { font-size: 32px; display: block; margin-bottom: 8px; }
 
-    /* ── Loader ── */
-    .loader { text-align: center; padding: 40px; color: var(--text3); }
-
-    /* ── Responsive ── */
     @media (max-width: 900px) {
-      .metrics { grid-template-columns: repeat(2, 1fr); }
-      .row2, .row3 { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 500px) {
-      .metrics { grid-template-columns: 1fr 1fr; }
+      .metrics { grid-template-columns: repeat(2,1fr); }
+      .row2 { grid-template-columns: 1fr; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .btn-csv { margin-left: 0; }
     }
   </style>
 </head>
 <body>
 
 <nav class="topbar">
-  <div class="topbar-left">
-    <i class="ti ti-shield-lock" style="font-size:20px;color:var(--purple);" aria-hidden="true"></i>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <i class="ti ti-shield-lock" style="font-size:20px;color:var(--purple);"></i>
     <span class="topbar-logo"><span>HIDS</span> · Panel de control</span>
   </div>
-  <div class="topbar-right">
+  <div style="display:flex;align-items:center;gap:12px;">
     <span id="last-update">Cargando…</span>
     <span class="badge-online">En línea</span>
   </div>
 </nav>
 
-<main class="main" role="main">
-  <h2 class="sr-only">Panel de control del sistema de detección de intrusiones</h2>
+<main class="main">
 
-  <!-- Metric cards -->
-  <section class="metrics" id="metrics">
-    <div class="loader"><i class="ti ti-loader-2" style="font-size:24px;"></i></div>
-  </section>
+  <!-- Filtros -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <span class="filter-label"><i class="ti ti-search"></i> Buscar</span>
+      <input id="f-text" class="filter-input filter-search" type="text" placeholder="Mensaje, módulo, host…" />
+    </div>
+    <div class="filter-group">
+      <span class="filter-label"><i class="ti ti-calendar"></i> Desde</span>
+      <input id="f-desde" class="filter-input filter-date" type="date" />
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Hasta</span>
+      <input id="f-hasta" class="filter-input filter-date" type="date" />
+    </div>
+    <div class="filter-group">
+      <span class="filter-label"><i class="ti ti-cpu"></i> Módulo</span>
+      <select id="f-modulo" class="filter-input filter-select">
+        <option value="">Todos los módulos</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label"><i class="ti ti-alert-triangle"></i> Criticidad</span>
+      <div class="crit-chips">
+        <div class="chip" data-crit="CRITICA" onclick="toggleCrit(this)">Crítica</div>
+        <div class="chip" data-crit="ALTA"    onclick="toggleCrit(this)">Alta</div>
+        <div class="chip" data-crit="MEDIA"   onclick="toggleCrit(this)">Media</div>
+        <div class="chip" data-crit="BAJA"    onclick="toggleCrit(this)">Baja</div>
+      </div>
+    </div>
+    <div class="filter-group" style="flex-direction:row;align-items:flex-end;gap:8px;margin-left:4px;">
+      <button class="btn btn-apply" onclick="applyFilters()">
+        <i class="ti ti-filter"></i> Filtrar
+        <span id="filter-count"></span>
+      </button>
+      <button class="btn btn-reset" onclick="resetFilters()">
+        <i class="ti ti-refresh"></i> Limpiar
+      </button>
+    </div>
+    <button class="btn btn-csv" onclick="exportCSV()">
+      <i class="ti ti-download"></i> Exportar CSV
+    </button>
+  </div>
 
-  <!-- Alerts + module bars -->
+  <!-- Métricas -->
+  <section class="metrics" id="metrics"></section>
+
+  <!-- Tabla + barras -->
   <div class="row2">
     <div class="panel">
-      <div class="panel-title"><i class="ti ti-bell" aria-hidden="true" style="vertical-align:-1px;margin-right:5px;"></i>Alertas recientes</div>
-      <div id="alert-list"><div class="loader"><i class="ti ti-loader-2" style="font-size:20px;"></i></div></div>
+      <div class="panel-title">
+        <i class="ti ti-table"></i> Alertas
+        <span id="alert-count" style="font-size:11px;background:var(--bg);border:1px solid var(--border);padding:1px 8px;border-radius:20px;color:var(--text2);font-weight:400;"></span>
+      </div>
+      <div id="alert-table"></div>
+      <div id="pagination"></div>
     </div>
     <div class="panel">
-      <div class="panel-title"><i class="ti ti-layout-grid" aria-hidden="true" style="vertical-align:-1px;margin-right:5px;"></i>Alertas por módulo</div>
-      <div id="module-bars"><div class="loader"><i class="ti ti-loader-2" style="font-size:20px;"></i></div></div>
+      <div class="panel-title"><i class="ti ti-layout-grid"></i> Por módulo</div>
+      <div id="module-bars"></div>
     </div>
   </div>
 
-  <!-- Charts row -->
+  <!-- Gráficos -->
   <div class="row2">
     <div class="panel">
-      <div class="panel-title"><i class="ti ti-chart-line" aria-hidden="true" style="vertical-align:-1px;margin-right:5px;"></i>Alertas por hora — últimas 24 h</div>
+      <div class="panel-title"><i class="ti ti-chart-line"></i> Alertas por hora — últimas 24 h</div>
       <div class="chart-wrap" style="height:200px;">
-        <canvas id="chart-hourly" role="img" aria-label="Gráfico de alertas por hora en las últimas 24 horas">Sin datos</canvas>
+        <canvas id="chart-hourly"></canvas>
       </div>
     </div>
     <div class="panel">
-      <div class="panel-title"><i class="ti ti-chart-donut" aria-hidden="true" style="vertical-align:-1px;margin-right:5px;"></i>Distribución por criticidad</div>
+      <div class="panel-title"><i class="ti ti-chart-donut"></i> Distribución por criticidad</div>
       <div style="display:flex;align-items:center;gap:16px;">
         <div class="chart-wrap" style="height:180px;flex:1;">
-          <canvas id="chart-donut" role="img" aria-label="Gráfico de distribución por nivel de criticidad">Sin datos</canvas>
+          <canvas id="chart-donut"></canvas>
         </div>
         <div id="donut-legend" style="display:flex;flex-direction:column;gap:7px;font-size:12px;"></div>
       </div>
@@ -203,7 +208,7 @@
 </main>
 
 <script>
-// ── Colores ────────────────────────────────────────────────────────────────
+const PAGE_SIZE = 10;
 const COLORS = {
   CRITICA: { dot:'#E24B4A', bg:'#FCEBEB', dk:'#A32D2D' },
   ALTA:    { dot:'#EF9F27', bg:'#FAEEDA', dk:'#854F0B' },
@@ -212,169 +217,247 @@ const COLORS = {
 };
 const MODULE_COLORS = ['#7F77DD','#378ADD','#1D9E75','#EF9F27','#E24B4A','#D4537E'];
 
-let chartHourly = null;
-let chartDonut  = null;
+let chartHourly = null, chartDonut = null;
+let activeCrits = new Set();
+let allAlerts   = [];   // todas las alertas del fetch actual
+let currentPage = 1;
 
-// ── Tiempo relativo ────────────────────────────────────────────────────────
-function timeAgo(ts) {
-  const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
-  if (diff < 60)  return `hace ${diff}s`;
-  if (diff < 3600) return `hace ${Math.floor(diff/60)}m`;
-  return `hace ${Math.floor(diff/3600)}h`;
+// ── Chips ─────────────────────────────────────────────────────────────────
+function toggleCrit(el) {
+  const c = el.dataset.crit;
+  if (activeCrits.has(c)) { activeCrits.delete(c); el.className = 'chip'; }
+  else { activeCrits.add(c); el.className = `chip active-${c}`; }
 }
 
-// ── Renderizar métricas ────────────────────────────────────────────────────
+// ── Params ────────────────────────────────────────────────────────────────
+function buildParams() {
+  const p = new URLSearchParams();
+  const texto  = document.getElementById('f-text').value.trim();
+  const desde  = document.getElementById('f-desde').value;
+  const hasta  = document.getElementById('f-hasta').value;
+  const modulo = document.getElementById('f-modulo').value;
+  if (texto)  p.set('q', texto);
+  if (desde)  p.set('desde', desde);
+  if (hasta)  p.set('hasta', hasta);
+  if (modulo) p.set('modulo', modulo);
+  if (activeCrits.size) p.set('criticidad', [...activeCrits].join(','));
+  return p;
+}
+
+function applyFilters() {
+  const n = [
+    document.getElementById('f-text').value.trim(),
+    document.getElementById('f-desde').value,
+    document.getElementById('f-hasta').value,
+    document.getElementById('f-modulo').value,
+  ].filter(Boolean).length + activeCrits.size;
+  const badge = document.getElementById('filter-count');
+  badge.textContent = n || '';
+  badge.style.display = n ? 'inline' : 'none';
+  currentPage = 1;
+  refresh();
+}
+
+function resetFilters() {
+  document.getElementById('f-text').value  = '';
+  document.getElementById('f-desde').value = '';
+  document.getElementById('f-hasta').value = '';
+  document.getElementById('f-modulo').value = '';
+  activeCrits.clear();
+  document.querySelectorAll('.chip').forEach(c => c.className = 'chip');
+  document.getElementById('filter-count').style.display = 'none';
+  currentPage = 1;
+  refresh();
+}
+
+function exportCSV() {
+  window.location.href = `/api/export/csv?${buildParams()}`;
+}
+
+// ── Módulos ───────────────────────────────────────────────────────────────
+async function loadModulos() {
+  const mods = await (await fetch('/api/modulos')).json();
+  const sel  = document.getElementById('f-modulo');
+  mods.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o); });
+}
+
+// ── Métricas ──────────────────────────────────────────────────────────────
 function renderMetrics(s) {
-  const el = document.getElementById('metrics');
-  const pct = s.total ? ((s.by_criticidad.CRITICA / s.total) * 100).toFixed(0) : 0;
-  el.innerHTML = `
+  const pct = s.total ? ((s.by_criticidad.CRITICA / s.total)*100).toFixed(0) : 0;
+  document.getElementById('metrics').innerHTML = `
     <div class="metric">
-      <div class="metric-label"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Alertas totales</div>
+      <div class="metric-label"><i class="ti ti-alert-triangle"></i>Total alertas</div>
       <div class="metric-val" style="color:var(--red)">${s.total}</div>
       <div class="metric-sub up">${s.by_criticidad.CRITICA} críticas (${pct}%)</div>
     </div>
     <div class="metric">
-      <div class="metric-label"><i class="ti ti-server" aria-hidden="true"></i>Hosts afectados</div>
+      <div class="metric-label"><i class="ti ti-server"></i>Hosts afectados</div>
       <div class="metric-val">${s.hosts_afectados}</div>
-      <div class="metric-sub">monitoreados activamente</div>
+      <div class="metric-sub">registrados en el período</div>
     </div>
     <div class="metric">
-      <div class="metric-label"><i class="ti ti-cpu" aria-hidden="true"></i>Módulos activos</div>
+      <div class="metric-label"><i class="ti ti-cpu"></i>Módulos activos</div>
       <div class="metric-val" style="color:var(--purple)">${Object.keys(s.by_modulo).length}</div>
-      <div class="metric-sub good">todos reportando</div>
+      <div class="metric-sub good">reportando eventos</div>
     </div>
     <div class="metric">
-      <div class="metric-label"><i class="ti ti-shield-check" aria-hidden="true"></i>Alertas bajas</div>
+      <div class="metric-label"><i class="ti ti-shield-check"></i>Alertas bajas</div>
       <div class="metric-val" style="color:var(--green)">${s.by_criticidad.BAJA}</div>
       <div class="metric-sub good">bajo riesgo</div>
-    </div>
-  `;
+    </div>`;
 }
 
-// ── Renderizar lista de alertas ────────────────────────────────────────────
-function renderAlerts(recent) {
-  const el = document.getElementById('alert-list');
-  if (!recent.length) {
-    el.innerHTML = '<div class="empty"><i class="ti ti-mood-happy"></i>Sin alertas registradas</div>';
+// ── Tabla + paginación ────────────────────────────────────────────────────
+function renderPage(page) {
+  currentPage = page;
+  const total     = allAlerts.length;
+  const totalPags = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  currentPage     = Math.min(Math.max(1, currentPage), totalPags);
+
+  const start  = (currentPage - 1) * PAGE_SIZE;
+  const slice  = allAlerts.slice(start, start + PAGE_SIZE);
+
+  // Tabla
+  document.getElementById('alert-count').textContent =
+    `${total} resultado${total !== 1 ? 's' : ''}`;
+
+  if (!total) {
+    document.getElementById('alert-table').innerHTML =
+      '<div class="empty"><i class="ti ti-mood-empty" style="font-size:28px;display:block;margin-bottom:8px;"></i>Sin alertas para los filtros aplicados</div>';
+    document.getElementById('pagination').innerHTML = '';
     return;
   }
-  el.innerHTML = recent.slice(0, 8).map(a => {
+
+  const rows = slice.map(a => {
     const c = (a.criticidad || 'BAJA').toUpperCase();
-    return `
-      <div class="alert-row">
-        <div class="alert-dot dot-${c}"></div>
-        <div class="alert-body">
-          <div class="alert-msg">${a.mensaje || '—'}</div>
-          <div class="alert-meta">${a.modulo || ''} · ${a.host || 'host'} · ${timeAgo(a.timestamp)}</div>
-        </div>
-        <span class="sev-badge sev-${c}">${c}</span>
-      </div>`;
+    return `<tr>
+      <td class="td-ts">${a.timestamp || '—'}</td>
+      <td><span class="sev-badge sev-${c}">${c}</span></td>
+      <td class="td-mod">${a.modulo || '—'}</td>
+      <td class="td-msg" title="${(a.mensaje||'').replace(/"/g,'&quot;')}">${a.mensaje || '—'}</td>
+      <td style="color:var(--text3);font-size:12px;">${a.host || '—'}</td>
+    </tr>`;
   }).join('');
+
+  document.getElementById('alert-table').innerHTML = `
+    <table class="alerts-table">
+      <thead><tr>
+        <th>Timestamp</th><th>Nivel</th><th>Módulo</th><th>Mensaje</th><th>Host</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  // Paginación
+  const maxBtns = 5;
+  let startPg = Math.max(1, currentPage - Math.floor(maxBtns/2));
+  let endPg   = Math.min(totalPags, startPg + maxBtns - 1);
+  if (endPg - startPg < maxBtns - 1) startPg = Math.max(1, endPg - maxBtns + 1);
+
+  let btns = '';
+  for (let i = startPg; i <= endPg; i++) {
+    btns += `<button class="pg-btn${i === currentPage ? ' active' : ''}" onclick="renderPage(${i})">${i}</button>`;
+  }
+
+  document.getElementById('pagination').innerHTML = `
+    <div class="pagination">
+      <span class="pagination-info">
+        Mostrando ${start + 1}–${Math.min(start + PAGE_SIZE, total)} de ${total}
+      </span>
+      <div class="pagination-btns">
+        <button class="pg-btn" onclick="renderPage(1)" ${currentPage===1?'disabled':''}>
+          <i class="ti ti-chevrons-left"></i>
+        </button>
+        <button class="pg-btn" onclick="renderPage(${currentPage-1})" ${currentPage===1?'disabled':''}>
+          <i class="ti ti-chevron-left"></i>
+        </button>
+        ${btns}
+        <button class="pg-btn" onclick="renderPage(${currentPage+1})" ${currentPage===totalPags?'disabled':''}>
+          <i class="ti ti-chevron-right"></i>
+        </button>
+        <button class="pg-btn" onclick="renderPage(${totalPags})" ${currentPage===totalPags?'disabled':''}>
+          <i class="ti ti-chevrons-right"></i>
+        </button>
+      </div>
+    </div>`;
 }
 
-// ── Renderizar barras por módulo ───────────────────────────────────────────
+// ── Barras módulos ────────────────────────────────────────────────────────
 function renderModuleBars(byModule) {
-  const el = document.getElementById('module-bars');
   const entries = Object.entries(byModule).sort((a,b) => b[1]-a[1]);
   const max = entries[0]?.[1] || 1;
-  if (!entries.length) { el.innerHTML = '<div class="empty"><i class="ti ti-box"></i>Sin datos de módulos</div>'; return; }
-  el.innerHTML = entries.map(([mod, count], i) => `
+  if (!entries.length) { document.getElementById('module-bars').innerHTML = '<div class="empty">Sin datos</div>'; return; }
+  document.getElementById('module-bars').innerHTML = entries.map(([mod, count], i) => `
     <div class="bar-row">
-      <div class="bar-lbl" title="${mod}">${mod.replace('_monitor','').replace('_','\u00A0')}</div>
-      <div class="bar-wrap">
-        <div class="bar-fill" style="width:${Math.round((count/max)*100)}%;background:${MODULE_COLORS[i % MODULE_COLORS.length]};"></div>
-      </div>
+      <div class="bar-lbl" title="${mod}">${mod}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round((count/max)*100)}%;background:${MODULE_COLORS[i%MODULE_COLORS.length]};"></div></div>
       <div class="bar-num">${count}</div>
     </div>`).join('');
 }
 
-// ── Gráfico de línea — alertas por hora ───────────────────────────────────
-function renderHourlyChart(hourly) {
+// ── Gráficos ──────────────────────────────────────────────────────────────
+function renderHourly(hourly) {
   const labels = Array.from({length:24}, (_,i) => `${String(i).padStart(2,'0')}:00`);
   const data   = labels.map((_,i) => hourly[String(i)] || 0);
   if (chartHourly) chartHourly.destroy();
   chartHourly = new Chart(document.getElementById('chart-hourly'), {
     type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Alertas',
-        data,
-        borderColor: '#7F77DD',
-        backgroundColor: 'rgba(127,119,221,0.12)',
-        fill: true,
-        tension: 0.35,
-        pointRadius: 2,
-        borderWidth: 2,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8, font:{size:11}, color:'#9098b0' }, grid:{display:false} },
-        y: { ticks: { font:{size:11}, color:'#9098b0', stepSize:1 }, grid:{color:'rgba(0,0,0,0.05)'}, beginAtZero:true }
-      }
-    }
+    data: { labels, datasets: [{ label:'Alertas', data, borderColor:'#7F77DD', backgroundColor:'rgba(127,119,221,0.12)', fill:true, tension:0.35, pointRadius:2, borderWidth:2 }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:8,font:{size:11},color:'#9098b0'},grid:{display:false}},
+               y:{ticks:{font:{size:11},color:'#9098b0',stepSize:1},grid:{color:'rgba(0,0,0,0.05)'},beginAtZero:true} } }
   });
 }
 
-// ── Gráfico de dona — por criticidad ──────────────────────────────────────
-function renderDonutChart(byCrit) {
+function renderDonut(byCrit) {
   const order  = ['CRITICA','ALTA','MEDIA','BAJA'];
   const labels = order.filter(k => byCrit[k] > 0);
   const data   = labels.map(k => byCrit[k]);
   const colors = labels.map(k => COLORS[k].dot);
-
   if (chartDonut) chartDonut.destroy();
   chartDonut = new Chart(document.getElementById('chart-donut'), {
     type: 'doughnut',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      cutout: '68%',
-      plugins: { legend: { display: false }, tooltip: { callbacks: {
-        label: ctx => ` ${ctx.label}: ${ctx.parsed} alertas`
-      }}}
-    }
+    data: { labels, datasets: [{ data, backgroundColor:colors, borderWidth:2, borderColor:'#fff' }] },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'68%',
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label: ctx => ` ${ctx.label}: ${ctx.parsed}`}} } }
   });
-
-  // Leyenda manual
   const total = data.reduce((a,b)=>a+b,0);
   document.getElementById('donut-legend').innerHTML = labels.map((l,i)=>`
     <div style="display:flex;align-items:center;gap:6px;">
       <span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};flex-shrink:0;"></span>
-      <span style="color:#5a6073;">${l}</span>
-      <span style="margin-left:auto;font-weight:500;color:#111318;">${data[i]}</span>
-      <span style="color:#9098b0;font-size:11px;">${total?Math.round(data[i]/total*100):0}%</span>
+      <span style="color:var(--text2);">${l}</span>
+      <span style="margin-left:auto;font-weight:500;">${data[i]}</span>
+      <span style="color:var(--text3);font-size:11px;">${total?Math.round(data[i]/total*100):0}%</span>
     </div>`).join('');
 }
 
-// ── Fetch y renderizado completo ───────────────────────────────────────────
+// ── Refresh ───────────────────────────────────────────────────────────────
 async function refresh() {
   try {
+    const qs = buildParams().toString();
+    const qstr = qs ? `?${qs}` : '';
     const [statsRes, alertsRes] = await Promise.all([
-      fetch('/api/stats'),
-      fetch('/api/alerts'),
+      fetch(`/api/stats${qstr}`),
+      fetch(`/api/alerts${qstr}`),
     ]);
-    const stats  = await statsRes.json();
-    const alerts = await alertsRes.json();
+    const stats = await statsRes.json();
+    allAlerts   = await alertsRes.json();
 
     renderMetrics(stats);
-    renderAlerts(alerts);
+    renderPage(currentPage);
     renderModuleBars(stats.by_modulo);
-    renderHourlyChart(stats.hourly);
-    renderDonutChart(stats.by_criticidad);
+    renderHourly(stats.hourly);
+    renderDonut(stats.by_criticidad);
 
     document.getElementById('last-update').textContent =
       'Actualizado ' + new Date().toLocaleTimeString('es', {hour:'2-digit',minute:'2-digit'});
-  } catch (err) {
-    console.error('Error al cargar datos:', err);
-    document.getElementById('last-update').textContent = 'Error al cargar datos';
+  } catch(e) {
+    document.getElementById('last-update').textContent = 'Error al cargar';
   }
 }
 
-// Carga inicial + actualización cada 30 s
+document.getElementById('f-text').addEventListener('keydown', e => { if (e.key === 'Enter') applyFilters(); });
+
+loadModulos();
 refresh();
 setInterval(refresh, 30000);
 </script>

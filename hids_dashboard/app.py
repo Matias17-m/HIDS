@@ -1,20 +1,14 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request, Response
 from datetime import datetime, timedelta
-import json
-import os
-import re
-import random
+import json, os, re, random, csv, io
 
 app = Flask(__name__)
 
-# ─── Ruta a tu archivo de alertas ───────────────────────────────────────────
 ALERTS_FILE = os.environ.get("ALERTS_FILE", "events.log")
 
-
-# ─── Parser de formato mixto ─────────────────────────────────────────────────
+# ─── Parser ──────────────────────────────────────────────────────────────────
 
 def normalizar_criticidad(c):
-    """Normaliza criticidades en inglés/español a los valores del dashboard."""
     mapa = {
         "CRITICAL": "CRITICA", "CRITICA": "CRITICA",
         "HIGH": "ALTA",        "ALTA": "ALTA",
@@ -23,8 +17,6 @@ def normalizar_criticidad(c):
     }
     return mapa.get((c or "").upper(), "BAJA")
 
-
-# Mapeo de tipo de alerta (texto plano) → módulo y criticidad
 TIPO_A_MODULO = {
     "ALERTA_INTEGRIDAD": ("file_integrity",  "CRITICA"),
     "ALERTA_CRITICA":    ("process_monitor", "CRITICA"),
@@ -39,9 +31,7 @@ _RE_PLAIN = re.compile(
     r"^\[(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s+\[(?P<tipo>[^\]]+)\]\s+(?P<msg>.+)$"
 )
 
-
 def parsear_linea_texto(line):
-    """Parsea líneas de texto plano: [timestamp] [TIPO] mensaje"""
     m = _RE_PLAIN.match(line)
     if not m:
         return None
@@ -56,9 +46,7 @@ def parsear_linea_texto(line):
         "host":       "localhost",
     }
 
-
 def load_alerts():
-    """Carga alertas desde events.log — soporta texto plano y JSONL mezclados."""
     if not os.path.exists(ALERTS_FILE):
         return []
     alerts = []
@@ -81,11 +69,65 @@ def load_alerts():
                 alerts.append(parsed)
     return alerts
 
+# ─── Filtros ─────────────────────────────────────────────────────────────────
+
+def aplicar_filtros(alerts, args):
+    """Filtra la lista de alertas según los parámetros de query string."""
+    fecha_desde = args.get("desde")       # "YYYY-MM-DD"
+    fecha_hasta = args.get("hasta")       # "YYYY-MM-DD"
+    criticidad  = args.get("criticidad")  # "CRITICA,ALTA" o vacío
+    modulos     = args.get("modulo")      # "file_integrity,auth_monitor" o vacío
+    texto       = args.get("q", "").strip().lower()
+
+    crits   = {c.strip().upper() for c in criticidad.split(",") if c.strip()} if criticidad else set()
+    mods    = {m.strip() for m in modulos.split(",") if m.strip()} if modulos else set()
+
+    result = []
+    for a in alerts:
+        ts_str = a.get("timestamp", "")
+
+        # Filtro fecha desde
+        if fecha_desde:
+            try:
+                if ts_str[:10] < fecha_desde:
+                    continue
+            except Exception:
+                pass
+
+        # Filtro fecha hasta
+        if fecha_hasta:
+            try:
+                if ts_str[:10] > fecha_hasta:
+                    continue
+            except Exception:
+                pass
+
+        # Filtro criticidad
+        if crits and a.get("criticidad", "").upper() not in crits:
+            continue
+
+        # Filtro módulo
+        if mods and a.get("modulo", "") not in mods:
+            continue
+
+        # Búsqueda de texto libre en mensaje, módulo y host
+        if texto:
+            haystack = " ".join([
+                a.get("mensaje", ""),
+                a.get("modulo", ""),
+                a.get("host", ""),
+                a.get("id_alerta", ""),
+            ]).lower()
+            if texto not in haystack:
+                continue
+
+        result.append(a)
+    return result
+
+# ─── Stats ────────────────────────────────────────────────────────────────────
 
 def compute_stats(alerts):
-    """Calcula todas las métricas que necesita el dashboard."""
     total = len(alerts)
-
     by_crit = {"CRITICA": 0, "ALTA": 0, "MEDIA": 0, "BAJA": 0}
     for a in alerts:
         c = (a.get("criticidad") or "BAJA").upper()
@@ -108,7 +150,8 @@ def compute_stats(alerts):
             pass
 
     recent = sorted(alerts, key=lambda x: x.get("timestamp", ""), reverse=True)[:10]
-    hosts = list({a.get("host", "localhost") for a in alerts})
+    hosts  = list({a.get("host", "localhost") for a in alerts})
+    modulos_disponibles = sorted(by_module.keys())
 
     return {
         "total": total,
@@ -118,8 +161,8 @@ def compute_stats(alerts):
         "recent": recent,
         "hosts_afectados": len(hosts),
         "hosts": hosts,
+        "modulos_disponibles": modulos_disponibles,
     }
-
 
 # ─── Rutas ───────────────────────────────────────────────────────────────────
 
@@ -131,22 +174,56 @@ def index():
 @app.route("/api/stats")
 def api_stats():
     alerts = load_alerts()
-    stats = compute_stats(alerts)
-    return jsonify(stats)
+    filtradas = aplicar_filtros(alerts, request.args)
+    return jsonify(compute_stats(filtradas))
 
 
 @app.route("/api/alerts")
 def api_alerts():
     alerts = load_alerts()
-    recent = sorted(alerts, key=lambda x: x.get("timestamp", ""), reverse=True)[:50]
-    return jsonify(recent)
+    filtradas = aplicar_filtros(alerts, request.args)
+    ordenadas = sorted(filtradas, key=lambda x: x.get("timestamp", ""), reverse=True)
+    return jsonify(ordenadas)
 
 
-# ─── Generador de datos de prueba ────────────────────────────────────────────
+@app.route("/api/modulos")
+def api_modulos():
+    """Devuelve la lista de módulos disponibles para poblar el filtro."""
+    alerts = load_alerts()
+    modulos = sorted({a.get("modulo", "desconocido") for a in alerts})
+    return jsonify(modulos)
+
+
+@app.route("/api/export/csv")
+def export_csv():
+    """Exporta las alertas filtradas como CSV descargable."""
+    alerts  = load_alerts()
+    filtradas = aplicar_filtros(alerts, request.args)
+    ordenadas = sorted(filtradas, key=lambda x: x.get("timestamp", ""), reverse=True)
+
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output,
+        fieldnames=["timestamp", "id_alerta", "modulo", "criticidad", "mensaje", "host"],
+        extrasaction="ignore",
+        lineterminator="\n",
+    )
+    writer.writeheader()
+    for a in ordenadas:
+        writer.writerow(a)
+
+    filename = f"hids_alertas_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+# ─── Demo ─────────────────────────────────────────────────────────────────────
 
 @app.route("/api/demo/generate")
 def generate_demo():
-    """Genera alertas de demo en events.log. Eliminar en producción."""
     modulos = ["auth_monitor", "file_integrity", "file_monitor",
                "network_monitor", "process_monitor"]
     criticidades = ["CRITICA", "ALTA", "MEDIA", "BAJA"]
@@ -162,8 +239,8 @@ def generate_demo():
     demo_alerts = []
     for i in range(80):
         modulo = random.choice(modulos)
-        crit = random.choices(criticidades, weights=pesos)[0]
-        ts = now - timedelta(minutes=random.randint(0, 1440))
+        crit   = random.choices(criticidades, weights=pesos)[0]
+        ts     = now - timedelta(minutes=random.randint(0, 1440))
         demo_alerts.append({
             "timestamp":  ts.strftime("%Y-%m-%d %H:%M:%S"),
             "id_alerta":  f"ALT-{1000 + i}",
@@ -179,4 +256,4 @@ def generate_demo():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)
