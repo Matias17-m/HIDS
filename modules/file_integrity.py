@@ -153,13 +153,13 @@ def verificar_integridad():
     if anomalias_detectadas:
         # 1. Imprimir todo el bloque unificado en la terminal
         print("\n" + "="*75)
-        print("🚨 REPORTE DE ALTERACIÓN DE INTEGRIDAD DETECTADO 🚨")
+        print("---REPORTE DE ALTERACION DE INTEGRIDAD DETECTADO---")
         print("="*75)
         for detalle in detalles_consola:
             print(detalle)
             print("-" * 75)
             
-        # 2. Unificar los mensajes para el evento único de Log, Dashboard y Correo
+        # 2. Unificar los mensajes para el evento unico de Log, Dashboard y Correo
         mensaje_unificado = " | ".join(anomalias_detectadas)
         registrar_evento("ALERTA_INTEGRIDAD", "file_integrity", "CRITICAL", mensaje_unificado)
 

@@ -39,3 +39,4 @@ mysql:x:111:110:MariaDB Server,,,:/nonexistent:/bin/false
 profesor_jose:x:1005:1005:Auditoria_HIDS,,,:/home/profesor_jose:/bin/bash
 profesor_jose:x:1005:1005:Auditoria_HIDS,,,:/home/profesor_jose:/bin/bash
 profesor_prueba:x:1006:1006::/home/profesor_prueba:/bin/sh
+test_unificado:x:1007:1007::/home/test_unificado:/bin/sh
