@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-# Forzamos la carga del archivo .env apuntando a su ubicacion real
+# Forzamos la carga del archivo .env 
 ruta_env = '/home/matias/hids/.env'
 load_dotenv(dotenv_path=ruta_env)
 import json
@@ -16,15 +16,16 @@ LOG_PATH = "logs/events.log"
 def enviar_alerta_email(tipo_evento, modulo, prioridad, mensaje):
     """ Se conecta al servidor SMTP de Gmail usando TLS y envía una notificación formal al administrador 
     en caso de alertas critivcas """
-    # ================= CONFIGURACIÓN DE CREDENCIALES =================
-    remitente = os.environ.get("HIDS_REMITENTE")      # El correo que creaste el token
-    destinatario = os.environ.get("HIDS_DESTINATARIO")  # Tu mail personal donde querés que lleguen
-    password = os.environ.get("HIDS_EMAIL_PASSWORD")               # ¡PEGÁ ACÁ LAS 16 LETRAS DEL PASO 1!
+    # ================= CONFIGURACION DE CREDENCIALES =================
+    remitente = os.environ.get("REMITENTE")      # El correo con el que se creo el token
+    destinatario = os.environ.get("DESTINATARIO")  # Tu mail personal donde llegaran
+    password = os.environ.get("PASSWORD")               
     # =================================================================
     #
-    print(f"[DEBUG] Remitente:    {remitente}")
-    print(f"[DEBUG] Destinatario: {destinatario}")
-    print(f"[DEBUG] Password:     {'OK' if password else 'NO ENCONTRADA ❌'}")
+    # para testeo
+    #print(f"[DEBUG] Remitente:    {remitente}")
+    #print(f"[DEBUG] Destinatario: {destinatario}")
+    #print(f"[DEBUG] Password:     {'OK' if password else 'NO ENCONTRADA ❌'}")
 
     if not all([remitente, destinatario, password]):
         print("[-] Faltan variables de entorno, abortando envío")

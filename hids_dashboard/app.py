@@ -1,11 +1,18 @@
 from flask import Flask, render_template, jsonify, request, Response
 from datetime import datetime, timedelta
+from pathlib import Path
 import json, os, re, random, csv, io
 
 app = Flask(__name__)
 
-ALERTS_FILE = os.environ.get("ALERTS_FILE", "events.log")
+# 1. Detecta la carpeta actual (hids_dashboard)
+CARPETA_DASHBOARD = Path(__file__).resolve().parent
 
+# 2. SUBE UN NIVEL a la carpeta raíz (hids) para corregir el desvío
+RAIZ_PROYECTO = CARPETA_DASHBOARD.parent
+
+ALERTS_FILE = os.environ.get("ALERTS_FILE", str(RAIZ_PROYECTO / "logs" / "events.log"))
+print(f"\n[DEBUG] El Dashboard está buscando los logs en: {ALERTS_FILE}\n")
 # ─── Parser ──────────────────────────────────────────────────────────────────
 
 def normalizar_criticidad(c):
@@ -75,8 +82,8 @@ def aplicar_filtros(alerts, args):
     """Filtra la lista de alertas según los parámetros de query string."""
     fecha_desde = args.get("desde")       # "YYYY-MM-DD"
     fecha_hasta = args.get("hasta")       # "YYYY-MM-DD"
-    criticidad  = args.get("criticidad")  # "CRITICA,ALTA" o vacío
-    modulos     = args.get("modulo")      # "file_integrity,auth_monitor" o vacío
+    criticidad  = args.get("criticidad")  # "CRITICA,ALTA" o vacio
+    modulos     = args.get("modulo")      # "file_integrity,auth_monitor" o vacio
     texto       = args.get("q", "").strip().lower()
 
     crits   = {c.strip().upper() for c in criticidad.split(",") if c.strip()} if criticidad else set()
@@ -106,11 +113,11 @@ def aplicar_filtros(alerts, args):
         if crits and a.get("criticidad", "").upper() not in crits:
             continue
 
-        # Filtro módulo
+        # Filtro modulo
         if mods and a.get("modulo", "") not in mods:
             continue
 
-        # Búsqueda de texto libre en mensaje, módulo y host
+        # Busqueda de texto libre en mensaje, modulo y host
         if texto:
             haystack = " ".join([
                 a.get("mensaje", ""),

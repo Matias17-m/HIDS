@@ -16,3 +16,5 @@ logs/events.log
 
 # Credenciales y variables de entorno críticas
 .env
+
+no_autorizado
